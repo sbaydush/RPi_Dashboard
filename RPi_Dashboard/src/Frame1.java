@@ -3,7 +3,6 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.text.NumberFormat;
-import java.util.Locale;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -28,6 +27,7 @@ public class Frame1 {
 	private JLabel lblPriceETH;
 	private JLabel lblPriceLTC;
 	private JLabel lblCryptoBG;
+	private JLabel lblProfitValue;
 	
 	/**
 	 * Launch the application.
@@ -67,10 +67,11 @@ public class Frame1 {
 	class GetCryptoPrices extends TimerTask {
 	    public void run() {
 	    	try {
+	    		
 	    	    JSONObject json = new JSONObject(readUrl("https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC,LTC,ETH&tsyms=USD&e=Coinbase&extraParams=your_app_name"));
 
-	    	    //Set numberformat for String so it will have commas (e.x. 7,230.35)
-	    	    NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.US);
+	    	    //Set numberformat for String for currency (e.x. $7,230.35)
+	    	    NumberFormat formatter = NumberFormat.getCurrencyInstance();
 	    	    
 	    	    
 	    	    //Get Current Prices
@@ -109,19 +110,20 @@ public class Frame1 {
 	    	    //tblCrypto.setValueAt("ETH", 2, 0);
 	    	    
 	    	    //Populate Current Prices
-	    	    String strBTCPrice = numberFormat.format(BTC_Price);
+	    	    //String strBTCPrice = numberFormat.format(BTC_Price);
+	    	    String strBTCPrice = formatter.format(BTC_Price);
 	    	    lblPrice.setText(strBTCPrice);
 	    	    lblPriceBTC.setText(strBTCPrice);
 	    	    
-	    	    String strETHPrice = numberFormat.format(ETH_Price);
+	    	    String strETHPrice = formatter.format(ETH_Price);
 	    	    lblPriceETH.setText(strETHPrice);
 	    	    
-	    	    String strLTCPrice = numberFormat.format(LTC_Price);
+	    	    String strLTCPrice = formatter.format(LTC_Price);
 	    	    lblPriceLTC.setText(strLTCPrice);
 	    	    
 	    	    
 	    	    //Populate 24 Hour Change in Price
-	    	    String strBTCChange = (numberFormat.format(BTC_Change)).replaceAll("-", "");
+	    	    String strBTCChange = (formatter.format(BTC_Change)).replaceAll("-", "");
 	    	    lblChange.setText(strBTCChange);
 	    	    
 	    	    
@@ -140,6 +142,14 @@ public class Frame1 {
 	    	    }
 	    	    
 	    	    
+	    	    //Set Profit value
+	    	    
+	    	    
+	    	    double dblBitcoinOwned = 1.12;
+	    	    double dblSpent = 8400.00;
+	    	    double dblProfitValue = (dblBitcoinOwned * BTC_Price) - dblSpent;
+	    	    String strProfitValue = formatter.format(dblProfitValue);
+	    	    lblProfitValue.setText(strProfitValue);
 	    	    
 	    	    
 	    	    
@@ -170,54 +180,66 @@ public class Frame1 {
 	 */
 	private void initialize() {
 		frmRpiDashboard = new JFrame();
+		frmRpiDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE); // Already there
+		//frmRpiDashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
+		frmRpiDashboard.setUndecorated(true);
 		frmRpiDashboard.setAlwaysOnTop(true);
 		frmRpiDashboard.setTitle("RPi Dashboard");
 		frmRpiDashboard.setBounds(0, 0, 480, 320);
 		frmRpiDashboard.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		ImageIcon icon = new ImageIcon("resources/Background.png");
 		frmRpiDashboard.getContentPane().setLayout(null);
 		
 		lblPrice = new JLabel("0.00");
-		lblPrice.setFont(new Font("Dialog", Font.BOLD, 19));
-		lblPrice.setBounds(76, 65, 94, 23);
+		lblPrice.setHorizontalAlignment(SwingConstants.CENTER);
+		lblPrice.setFont(new Font("Dialog", Font.BOLD, 25));
+		lblPrice.setBounds(0, 61, 221, 23);
 		frmRpiDashboard.getContentPane().add(lblPrice);
 		
 		lblSign = new JLabel("");
 		lblSign.setForeground(new Color(0, 255, 0));
-		lblSign.setFont(new Font("Cantarell", Font.BOLD, 19));
-		lblSign.setBounds(288, 69, 66, 15);
+		lblSign.setFont(new Font("Cantarell", Font.BOLD, 25));
+		lblSign.setBounds(270, 61, 20, 23);
 		frmRpiDashboard.getContentPane().add(lblSign);
 		
 		lblChange = new JLabel("0.00");
-		lblChange.setFont(new Font("Dialog", Font.BOLD, 19));
-		lblChange.setBounds(306, 57, 94, 38);
+		lblChange.setHorizontalAlignment(SwingConstants.CENTER);
+		lblChange.setFont(new Font("Dialog", Font.BOLD, 25));
+		lblChange.setBounds(221, 61, 259, 23);
 		frmRpiDashboard.getContentPane().add(lblChange);
 		
 		lblPriceBTC = new JLabel("0.00");
 		lblPriceBTC.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceBTC.setBounds(63, 9, 66, 15);
+		lblPriceBTC.setBounds(57, 10, 66, 15);
 		frmRpiDashboard.getContentPane().add(lblPriceBTC);
 		
 		lblPriceETH = new JLabel("0.00");
 		lblPriceETH.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceETH.setBounds(182, 9, 66, 15);
+		lblPriceETH.setBounds(180, 10, 66, 15);
 		frmRpiDashboard.getContentPane().add(lblPriceETH);
 		
 		lblPriceLTC = new JLabel("0.00");
 		lblPriceLTC.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceLTC.setBounds(283, 9, 66, 15);
+		lblPriceLTC.setBounds(281, 10, 66, 15);
 		frmRpiDashboard.getContentPane().add(lblPriceLTC);
+		
+		JLabel lblProfit = new JLabel("Profit:");
+		lblProfit.setFont(new Font("Dialog", Font.BOLD, 10));
+		lblProfit.setBounds(335, 10, 35, 15);
+		frmRpiDashboard.getContentPane().add(lblProfit);
+		
+		lblProfitValue = new JLabel("");
+		lblProfitValue.setFont(new Font("Dialog", Font.BOLD, 10));
+		lblProfitValue.setBounds(376, 10, 66, 15);
+		frmRpiDashboard.getContentPane().add(lblProfitValue);
 		
 		lblCryptoBG = new JLabel();
 		lblCryptoBG.setVerticalAlignment(SwingConstants.TOP);
 		lblCryptoBG.setBounds(0, 0, 480, 151);
-		lblCryptoBG.setIcon(icon);
+		lblCryptoBG.setIcon(new ImageIcon(Frame1.class.getResource("/resources/Background.png")));
 		frmRpiDashboard.getContentPane().add(lblCryptoBG);
 
 		
 		
-		
-		//frame.getContentPane().add(tblCrypto, BorderLayout.SOUTH);
 	}
 }
 
