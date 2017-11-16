@@ -17,7 +17,7 @@ import javax.swing.JLabel;
 import javax.swing.SwingConstants;
 
 
-public class Frame1 {
+public class Dashboard {
 
 	private JFrame frmRpiDashboard;
 	private JLabel lblPrice;
@@ -36,7 +36,7 @@ public class Frame1 {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					Frame1 window = new Frame1();
+					Dashboard window = new Dashboard();
 					window.frmRpiDashboard.setVisible(true);
 
 				} catch (Exception e) {
@@ -168,7 +168,7 @@ public class Frame1 {
 	/**
 	 * Create the application.
 	 */
-	public Frame1() {
+	public Dashboard() {
 		initialize();
 		
 		Timer timer = new Timer();
@@ -235,7 +235,7 @@ public class Frame1 {
 		lblCryptoBG = new JLabel();
 		lblCryptoBG.setVerticalAlignment(SwingConstants.TOP);
 		lblCryptoBG.setBounds(0, 0, 480, 151);
-		lblCryptoBG.setIcon(new ImageIcon(Frame1.class.getResource("/resources/Background.png")));
+		lblCryptoBG.setIcon(new ImageIcon(Dashboard.class.getResource("/resources/Background.png")));
 		frmRpiDashboard.getContentPane().add(lblCryptoBG);
 
 		
