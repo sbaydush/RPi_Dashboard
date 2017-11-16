@@ -11,11 +11,12 @@ import javax.swing.JFrame;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
 import java.awt.Color;
 import java.awt.Font;
 import javax.swing.JLabel;
 import javax.swing.SwingConstants;
-
+import javax.swing.JPanel;
 
 public class Dashboard {
 
@@ -28,6 +29,7 @@ public class Dashboard {
 	private JLabel lblPriceLTC;
 	private JLabel lblCryptoBG;
 	private JLabel lblProfitValue;
+	private JLabel lbl_addBatch;
 	
 	/**
 	 * Launch the application.
@@ -152,7 +154,6 @@ public class Dashboard {
 	    	    lblProfitValue.setText(strProfitValue);
 	    	    
 	    	    
-	    	    
 	    	} catch (JSONException e) {
 	    	    e.printStackTrace();
 	    	} catch (Exception e) {
@@ -164,7 +165,22 @@ public class Dashboard {
 	    }
 	}
 
+	class RefreshMarquee extends TimerTask {
+		public void run() {
 
+			
+			//Sets the marquee string
+			String s = "Tomorrow, and tomorrow, and tomorrow, "
+    	            + "creeps in this petty pace from day to day, "
+    	            + "to the last syllable of recorded time; ... "
+    	            + "It is a tale told by an idiot, full of "
+    	            + "sound and fury signifying nothing.";
+    	    
+    	    Marquee marquee = new Marquee(lbl_addBatch, s, 64);
+            marquee.start();
+		}
+	}
+	
 	/**
 	 * Create the application.
 	 */
@@ -173,6 +189,7 @@ public class Dashboard {
 		
 		Timer timer = new Timer();
 		timer.schedule(new GetCryptoPrices(), 0, 10000);
+		timer.schedule(new RefreshMarquee(),  0, 600000);
 	}
 
 	/**
@@ -237,6 +254,14 @@ public class Dashboard {
 		lblCryptoBG.setBounds(0, 0, 480, 151);
 		lblCryptoBG.setIcon(new ImageIcon(Dashboard.class.getResource("/resources/Background.png")));
 		frmRpiDashboard.getContentPane().add(lblCryptoBG);
+		
+		JPanel newspanel = new JPanel();
+		newspanel.setBounds(0, 272, 480, 48);
+		frmRpiDashboard.getContentPane().add(newspanel);
+		
+		lbl_addBatch = new JLabel();
+		lbl_addBatch.setHorizontalAlignment(SwingConstants.LEFT);
+        newspanel.add(lbl_addBatch);
 
 		
 		
