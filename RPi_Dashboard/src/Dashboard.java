@@ -1,6 +1,9 @@
 import java.awt.EventQueue;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Timer;
@@ -24,7 +27,6 @@ public class Dashboard {
 	private JLabel lblPrice;
 	private JLabel lblSign;
 	private JLabel lblChange;
-	private JLabel lblPriceBTC;
 	private JLabel lblPriceETH;
 	private JLabel lblPriceLTC;
 	private JLabel lblCryptoBG;
@@ -47,6 +49,42 @@ public class Dashboard {
 			}
 		});
 	}
+	
+	public static String readRSSFeed(String urlAddress){
+        try{
+            URL rssUrl = new URL (urlAddress);
+            HttpURLConnection conn = null;
+            conn = (HttpURLConnection) rssUrl.openConnection();
+            conn.addRequestProperty("User-Agent", "Mozilla/5.0 (Windows; U; Win98; en-US; rv:1.7.2) Gecko/20040803");
+            conn.connect();
+            
+            BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            
+            String sourceCode = "";
+            String line;
+            
+            while ((line = in.readLine()) != null) {
+                int titleEndIndex = 0;
+                int titleStartIndex = 0;
+                while (titleStartIndex >= 0) {
+                    titleStartIndex = line.indexOf("<title>", titleEndIndex);
+                    if (titleStartIndex >= 0) {
+                        titleEndIndex = line.indexOf("</title>", titleStartIndex);
+                        sourceCode += line.substring(titleStartIndex + "<title>".length(), titleEndIndex) + "\n";
+                    }
+                }
+            }
+
+            in.close();
+            return sourceCode;
+        } catch (MalformedURLException ue){
+            System.out.println("Malformed URL");
+        } catch (IOException ioe){
+            System.out.println("Something went wrong reading the contents");
+            System.out.println(ioe);
+        }
+        return null;
+    }
 	
 	private static String readUrl(String urlString) throws Exception {
 	    BufferedReader reader = null;
@@ -115,7 +153,7 @@ public class Dashboard {
 	    	    //String strBTCPrice = numberFormat.format(BTC_Price);
 	    	    String strBTCPrice = formatter.format(BTC_Price);
 	    	    lblPrice.setText(strBTCPrice);
-	    	    lblPriceBTC.setText(strBTCPrice);
+	    	    //lblPriceBTC.setText(strBTCPrice);
 	    	    
 	    	    String strETHPrice = formatter.format(ETH_Price);
 	    	    lblPriceETH.setText(strETHPrice);
@@ -151,6 +189,17 @@ public class Dashboard {
 	    	    double dblSpent = 8400.00;
 	    	    double dblProfitValue = (dblBitcoinOwned * BTC_Price) - dblSpent;
 	    	    String strProfitValue = formatter.format(dblProfitValue);
+	    	    
+	    	    //Sets the color of the text depending on whether negative profit or not
+	    	    if(strProfitValue.contains("("))
+	    	    {
+	    	    	lblProfitValue.setForeground(new Color(204, 0, 0));
+	    	    }
+	    	    else
+	    	    {
+	    	    	lblProfitValue.setForeground(new Color(0, 255, 0));
+	    	    }
+	    	    
 	    	    lblProfitValue.setText(strProfitValue);
 	    	    
 	    	    
@@ -167,16 +216,19 @@ public class Dashboard {
 
 	class RefreshMarquee extends TimerTask {
 		public void run() {
-
+			//Sets the marquee string using Reddit news
+			String strNewsStories = readRSSFeed("https://www.reddit.com/r/news.rss");
 			
-			//Sets the marquee string
-			String s = "Tomorrow, and tomorrow, and tomorrow, "
-    	            + "creeps in this petty pace from day to day, "
-    	            + "to the last syllable of recorded time; ... "
-    	            + "It is a tale told by an idiot, full of "
-    	            + "sound and fury signifying nothing.";
-    	    
-    	    Marquee marquee = new Marquee(lbl_addBatch, s, 64);
+			//Replaces linebreaks with " -- "
+			strNewsStories = strNewsStories.replaceAll("\n", " -- ");
+			
+			//Removes non-ascii characters from the string
+			strNewsStories = strNewsStories.replaceAll("[^\\x00-\\x7F]", "");
+			
+			//System.out.print(strNewsStories);
+			
+			//Generates and starts the Marquee
+    	    Marquee marquee = new Marquee(lbl_addBatch, strNewsStories, 64);
             marquee.start();
 		}
 	}
@@ -214,7 +266,7 @@ public class Dashboard {
 		
 		lblSign = new JLabel("");
 		lblSign.setForeground(new Color(0, 255, 0));
-		lblSign.setFont(new Font("Cantarell", Font.BOLD, 25));
+		lblSign.setFont(new Font("Cantarell", Font.BOLD, 30));
 		lblSign.setBounds(270, 61, 20, 23);
 		frmRpiDashboard.getContentPane().add(lblSign);
 		
@@ -224,29 +276,24 @@ public class Dashboard {
 		lblChange.setBounds(221, 61, 259, 23);
 		frmRpiDashboard.getContentPane().add(lblChange);
 		
-		lblPriceBTC = new JLabel("0.00");
-		lblPriceBTC.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceBTC.setBounds(57, 10, 66, 15);
-		frmRpiDashboard.getContentPane().add(lblPriceBTC);
-		
 		lblPriceETH = new JLabel("0.00");
-		lblPriceETH.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceETH.setBounds(180, 10, 66, 15);
+		lblPriceETH.setFont(new Font("Dialog", Font.BOLD, 12));
+		lblPriceETH.setBounds(82, 10, 66, 15);
 		frmRpiDashboard.getContentPane().add(lblPriceETH);
 		
 		lblPriceLTC = new JLabel("0.00");
-		lblPriceLTC.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblPriceLTC.setBounds(281, 10, 66, 15);
+		lblPriceLTC.setFont(new Font("Dialog", Font.BOLD, 12));
+		lblPriceLTC.setBounds(203, 10, 66, 15);
 		frmRpiDashboard.getContentPane().add(lblPriceLTC);
 		
 		JLabel lblProfit = new JLabel("Profit:");
 		lblProfit.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblProfit.setBounds(335, 10, 35, 15);
+		lblProfit.setBounds(270, 11, 35, 15);
 		frmRpiDashboard.getContentPane().add(lblProfit);
 		
 		lblProfitValue = new JLabel("");
-		lblProfitValue.setFont(new Font("Dialog", Font.BOLD, 10));
-		lblProfitValue.setBounds(376, 10, 66, 15);
+		lblProfitValue.setFont(new Font("Dialog", Font.BOLD, 16));
+		lblProfitValue.setBounds(317, 0, 84, 33);
 		frmRpiDashboard.getContentPane().add(lblProfitValue);
 		
 		lblCryptoBG = new JLabel();
