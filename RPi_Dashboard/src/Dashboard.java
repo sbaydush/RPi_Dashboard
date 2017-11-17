@@ -1,4 +1,7 @@
+
+import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.Font;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -8,18 +11,13 @@ import java.net.URL;
 import java.text.NumberFormat;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
-
+import javax.swing.JLabel;
+import javax.swing.JPanel;
+import javax.swing.SwingConstants;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.awt.Color;
-import java.awt.Font;
-import javax.swing.JLabel;
-import javax.swing.SwingConstants;
-import javax.swing.JPanel;
 
 public class Dashboard {
 
