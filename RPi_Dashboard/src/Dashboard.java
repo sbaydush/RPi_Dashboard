@@ -119,41 +119,16 @@ public class Dashboard {
 	    	    Double ETH_Price = json.getJSONObject("RAW").getJSONObject("ETH").getJSONObject("USD").getDouble("PRICE");
 	    	    Double LTC_Price = json.getJSONObject("RAW").getJSONObject("LTC").getJSONObject("USD").getDouble("PRICE");
 
-	    	    //Get 24Hour High Prices
-	    	    //Double BTC_High = json.getJSONObject("RAW").getJSONObject("BTC").getJSONObject("USD").getDouble("HIGH24HOUR");
-	    	    //Double ETH_High = json.getJSONObject("RAW").getJSONObject("ETH").getJSONObject("USD").getDouble("HIGH24HOUR");
-	    	    //Double LTC_High = json.getJSONObject("RAW").getJSONObject("LTC").getJSONObject("USD").getDouble("HIGH24HOUR");
-	    	    
-	    	    //Get 24Hour Low Prices
-	    	    //Double BTC_Low = json.getJSONObject("RAW").getJSONObject("BTC").getJSONObject("USD").getDouble("LOW24HOUR");
-	    	    //Double ETH_Low = json.getJSONObject("RAW").getJSONObject("ETH").getJSONObject("USD").getDouble("LOW24HOUR");
-	    	    //Double LTC_Low = json.getJSONObject("RAW").getJSONObject("LTC").getJSONObject("USD").getDouble("LOW24HOUR");
-	    	    
+	    	    	    	    
 	    	    //Get 24Hour Change in Price
 	    	    Double BTC_Change = json.getJSONObject("RAW").getJSONObject("BTC").getJSONObject("USD").getDouble("CHANGE24HOUR");
 	    	    Double ETH_Change = json.getJSONObject("RAW").getJSONObject("ETH").getJSONObject("USD").getDouble("CHANGE24HOUR");
 	    	    Double LTC_Change = json.getJSONObject("RAW").getJSONObject("LTC").getJSONObject("USD").getDouble("CHANGE24HOUR");
 	    	    
-	    	    //Round 24Hour Change
-	    	    
-	    	    BTC_Change = Math.round(BTC_Change * 100.0) / 100.0;
-	    	    ETH_Change = Math.round(ETH_Change * 100.0) / 100.0;
-	    	    LTC_Change = Math.round(LTC_Change * 100.0) / 100.0;
-	    	    
-	    	    
-	    	    
-	    	    
-	    	    
-	    	    //Populate Coin Labels
-	    	    //tblCrypto.setValueAt("BTC", 0, 0);
-	    	    //tblCrypto.setValueAt("LTC", 1, 0);
-	    	    //tblCrypto.setValueAt("ETH", 2, 0);
-	    	    
+	    	        	    
 	    	    //Populate Current Prices
-	    	    //String strBTCPrice = numberFormat.format(BTC_Price);
 	    	    String strBTCPrice = formatter.format(BTC_Price);
 	    	    lblPrice.setText(strBTCPrice);
-	    	    //lblPriceBTC.setText(strBTCPrice);
 	    	    
 	    	    String strETHPrice = formatter.format(ETH_Price);
 	    	    lblPriceETH.setText(strETHPrice);
