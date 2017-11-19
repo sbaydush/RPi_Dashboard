@@ -1,3 +1,4 @@
+package net.baydush.rpi;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -10,22 +11,22 @@ class Marquee implements ActionListener {
     private static final int RATE = 12;
     private final Timer timer = new Timer(1000 / RATE, this);
     private final JLabel label;
-    private final String s;
-    private final int n;
+    private final String allText;
+    private final int marqueeWidth;
     private int index;
 
-    public Marquee(JLabel label, String s, int n) {
-        if (s == null || n < 1) {
-            throw new IllegalArgumentException("Null string or n < 1");
+    public Marquee(JLabel label, String s, int marqueeWidth) {
+        if (s == null || marqueeWidth < 1) {
+            throw new IllegalArgumentException("Null string or marqueeWidth < 1");
         }
-        StringBuilder sb = new StringBuilder(n);
-        for (int i = 0; i < n; i++) {
+        StringBuilder sb = new StringBuilder(marqueeWidth);
+        for (int i = 0; i < marqueeWidth; i++) {
             sb.append(' ');
         }
         this.label = label;
-        this.s = sb + s + sb;
-        this.n = n;
-        label.setFont(new Font("Serif", Font.ITALIC, 36));
+        this.allText = sb + s + sb;
+        this.marqueeWidth = marqueeWidth;
+        label.setFont(new Font("Serif", Font.ITALIC, 32));
         label.setText(sb.toString());
     }
 
@@ -40,9 +41,9 @@ class Marquee implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         index++;
-        if (index > s.length() - n) {
+        if (index > allText.length() - marqueeWidth) {
             index = 0;
         }
-        label.setText(s.substring(index, index + n));
+        label.setText(allText.substring(index, index + marqueeWidth));
     }
 }
