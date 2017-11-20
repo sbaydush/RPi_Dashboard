@@ -150,6 +150,8 @@ public class Dashboard {
                 String strLTCPrice = FORMATTER.format( cryptoPrices.get( "LTC" ).getPrice() );
                 lblPriceLTC.setText( strLTCPrice );
 
+                CryptoPrice eth = cryptoPrices.get( "ETH" );
+                CryptoPrice ltc = cryptoPrices.get( "LTC" );
                 CryptoPrice btc = cryptoPrices.get( "BTC" );
                 String strBTCPrice = FORMATTER.format( btc.getPrice() );
                 lblPriceBTC.setText( strBTCPrice );
@@ -166,9 +168,11 @@ public class Dashboard {
                 }
 
                 // Set Profit value
-                double dblBitcoinOwned = CONFIG.getDouble( "Coins.Qty" );
-                double dblSpent = CONFIG.getDouble( "Coins.Cost" );
-                double dblProfitValue = ( dblBitcoinOwned * btc.getPrice() ) - dblSpent;
+                double dblBitcoinOwned = CONFIG.getDouble( "Bitcoin.Qty" );
+                double dblEthereumOwned = CONFIG.getDouble( "Ethereum.Qty" );
+                double dblLitecoinOwned = CONFIG.getDouble( "Litecoin.Qty" );
+                double dblSpent = CONFIG.getDouble( "Coins.TotalCost" );
+                double dblProfitValue = (( dblBitcoinOwned * btc.getPrice() ) + (dblEthereumOwned * eth.getPrice()) + (dblLitecoinOwned * ltc.getPrice())) - dblSpent;
 
                 // Sets the color of the text depending on whether negative
                 // profit or not
@@ -317,7 +321,7 @@ public class Dashboard {
 
         lblProfitValue = new JLabel( "----" );
         lblProfitValue.setFont( new Font( "Dialog", Font.BOLD, 16 ) );
-        lblProfitValue.setBounds( 317, 0, 84, 33 );
+        lblProfitValue.setBounds( 317, 0, 113, 33 );
         frmRpiDashboard.getContentPane().add( lblProfitValue );
 
         lblCryptoBG = new JLabel();
