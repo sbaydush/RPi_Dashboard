@@ -1,9 +1,11 @@
 package net.baydush.rpi;
 
+import java.awt.AWTEvent;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
+import java.awt.Toolkit;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -38,6 +40,7 @@ import info.monitorenter.gui.chart.ITrace2D;
 import info.monitorenter.gui.chart.axis.scalepolicy.AxisScalePolicyManualTicks;
 import info.monitorenter.gui.chart.labelformatters.LabelFormatterDate;
 import info.monitorenter.gui.chart.labelformatters.LabelFormatterNumber;
+import info.monitorenter.gui.chart.pointpainters.PointPainterDisc;
 import info.monitorenter.gui.chart.rangepolicies.RangePolicyFixedViewport;
 import info.monitorenter.gui.chart.traces.Trace2DSimple;
 import info.monitorenter.util.Range;
@@ -164,7 +167,7 @@ public class Dashboard {
                             lblChangePrice.setForeground( new Color( 204, 0, 0 ) );
                         } else {
                             lblChangePrice.setFont( new Font( "Cantarell", Font.BOLD, 19 ) );
-                            lblChangePrice.setForeground( new Color( 0, 255, 0 ) );
+                            lblChangePrice.setForeground( Color.GREEN );
                         }
                     }
                 }
@@ -175,7 +178,7 @@ public class Dashboard {
                 if( dblProfitValue < 0 ) {
                     lblProfitValue.setForeground( new Color( 204, 0, 0 ) );
                 } else {
-                    lblProfitValue.setForeground( new Color( 0, 255, 0 ) );
+                    lblProfitValue.setForeground( Color.GREEN );
                 }
 
             }
@@ -229,6 +232,7 @@ public class Dashboard {
         bitcoinHistoricalPrices = new BitcoinHistoricalPrices(strSymbols[0]);
         
         initialize();
+
         for( int ix = 0; ix < strNames.length; ix++ ) {
             lblNames[ix].setText( strNames[ix] );
             cryptoPrices.addSymbol( strSymbols[ix] );
@@ -236,7 +240,7 @@ public class Dashboard {
         fillLabels(strNames);
 
         fillGraph();
-
+        
         Timer timer = new Timer();
         timer.schedule( new RefreshCryptoPrices(), 0, 10000 );
         timer.schedule( new RefreshMarquee(), 0, 600000 );
@@ -259,12 +263,23 @@ public class Dashboard {
         graphPanel.getAxisY().getAxisTitle().setTitle( "Price" );
         // Create an ITrace:
         ITrace2D trace = new Trace2DSimple("");
-		trace.setColor(new Color(0, 0, 255));
+		trace.setColor(Color.BLUE);
 		trace.setStroke(new BasicStroke(1.5f));
-		
+
         // Add the trace to the chart. This has to be done before adding points
         // (deadlock prevention):
         graphPanel.addTrace( trace );
+
+        // Tool tips and highlighting: Both modes point out the neares trace
+        // point to the cursor:
+        graphPanel.setToolTipType( Chart2D.ToolTipType.VALUE_SNAP_TO_TRACEPOINTS );
+        trace.setPointHighlighter( new PointPainterDisc( 10 ) );
+        graphPanel.enablePointHighlighting( true );
+        // add code to deactivate the mouse tootip when we leave the graph JPanel
+        Toolkit.getDefaultToolkit().addAWTEventListener(
+                new TargetedMouseHandler(this.frmRpiDashboard, this.graphPanel), 
+                AWTEvent.MOUSE_EVENT_MASK);
+
 
         for( Quote quote : bitcoinHistoricalPrices.quotes) {
             trace.addPoint( quote.date.getTime(), quote.price );
@@ -386,7 +401,7 @@ public class Dashboard {
         frmRpiDashboard.getContentPane().add(lblSinceYesterday);
 
         JPanel newspanel = new JPanel();
-        newspanel.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
+        newspanel.setBorder(new MatteBorder(1, 1, 1, 1, Color.WHITE));
         newspanel.setBounds( 0, 274, 480, 46 );
         frmRpiDashboard.getContentPane().add( newspanel );
 
@@ -396,6 +411,7 @@ public class Dashboard {
         
         graphPanel = new Chart2D();
         graphPanel.setBounds(0, 124, 480, 150);
+     
         frmRpiDashboard.getContentPane().add(graphPanel);
         
         JSeparator separator_2 = new JSeparator();

@@ -44,6 +44,7 @@ public class BitcoinHistoricalPrices {
 			}
             this.price = price;
         }
+        
     }
     
     public ArrayList<Quote> quotes;
