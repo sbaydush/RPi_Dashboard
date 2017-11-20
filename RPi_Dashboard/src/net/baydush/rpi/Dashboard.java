@@ -1,5 +1,6 @@
 package net.baydush.rpi;
 
+import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -44,6 +45,7 @@ import info.monitorenter.util.Range;
 import net.baydush.rpi.BitcoinHistoricalPrices.Quote;
 import javax.swing.JInternalFrame;
 import javax.swing.border.MatteBorder;
+import javax.swing.JSeparator;
 
 public class Dashboard {
     /**
@@ -61,17 +63,22 @@ public class Dashboard {
     static NumberFormat FORMATTER = new DecimalFormat( "$#,##0.00;-$#,##0.00" );
 
     private JFrame frmRpiDashboard;
-    private JLabel lblPriceBTC;
-    private JLabel lblChangeBTC;
-    private JLabel lblPriceETH;
-    private JLabel lblPriceLTC;
-    private JLabel lblCryptoBG;
+    private JLabel lblPriceMain;
+    private JLabel lblChangePrice;
+    private JLabel lblCoinPrice1;
+    private JLabel lblCoinPrice2;
     private JLabel lblProfitValue;
     private JLabel lbl_addBatch;
     private Chart2D graphPanel;
     private CryptoPrices cryptoPrices;
     private BitcoinHistoricalPrices bitcoinHistoricalPrices;
-
+    private JSeparator separator_1;
+    private JLabel lblPriceMainLabel;
+    private JLabel lblSinceYesterday;
+    private JSeparator separator_2;
+    private JLabel lblCoinName1;
+    private JLabel lblCoinName2;
+    
     /**
      * Launch the application.
      */
@@ -142,31 +149,124 @@ public class Dashboard {
             try {
 
                 cryptoPrices.update();
-
-                // Populate Current Prices
-                String strETHPrice = FORMATTER.format( cryptoPrices.get( "ETH" ).getPrice() );
-                lblPriceETH.setText( strETHPrice );
-
-                String strLTCPrice = FORMATTER.format( cryptoPrices.get( "LTC" ).getPrice() );
-                lblPriceLTC.setText( strLTCPrice );
-
+                //Gets the coin placement from config file
+                String strMainCoin = CONFIG.getString( "MainCoin.Name" ).toUpperCase();
+                String strCoin1 = CONFIG.getString( "Coin1.Name" ).toUpperCase();
+                String strCoin2 = CONFIG.getString( "Coin2.Name" ).toUpperCase();
+                
+                //Sets up variables for coins
                 CryptoPrice eth = cryptoPrices.get( "ETH" );
                 CryptoPrice ltc = cryptoPrices.get( "LTC" );
                 CryptoPrice btc = cryptoPrices.get( "BTC" );
+                
+                //Gets current prices
                 String strBTCPrice = FORMATTER.format( btc.getPrice() );
-                lblPriceBTC.setText( strBTCPrice );
+                String strETHPrice = FORMATTER.format( eth.getPrice() );
+                String strLTCPrice = FORMATTER.format( ltc.getPrice() );
+                
+
+                // Switch based on Main coin name set in config
+                // to populate current prices
+                
+                switch (strMainCoin) {
+                case "BTC" : {
+                	lblPriceMain.setText( strBTCPrice );
+                	lblChangePrice.setText( FORMATTER.format( btc.getChange24hour() ) );
+                	lblPriceMainLabel.setText( "BITCOIN PRICE" );
+                	break;
+                }
+                case "ETH" : {
+                	lblPriceMain.setText( strETHPrice );
+                	lblChangePrice.setText( FORMATTER.format( eth.getChange24hour() ) );
+                	lblPriceMainLabel.setText( "ETHEREUM PRICE" );
+                	break;
+                }
+                case "LTC" : {
+                	lblPriceMain.setText( strLTCPrice );
+                	lblChangePrice.setText( FORMATTER.format( ltc.getChange24hour() ) );
+                	lblPriceMainLabel.setText( "LITECOIN PRICE" );
+                	break;
+                }
+                default: {
+                	LOGGER.error("Value for MainCoin {} is invalid, defaulting to BTC",strMainCoin);
+                	lblPriceMain.setText( strBTCPrice );
+                	lblChangePrice.setText( FORMATTER.format( btc.getChange24hour() ) );
+                	break;
+                }
+                }
+                
+                
+                // Switch based on Coin1 name set in config 
+                // to populate current prices
+                
+                switch (strCoin1) {
+                case "BTC": {
+                	lblCoinName1.setText("Bitcoin •");
+                	lblCoinPrice1.setText( strBTCPrice );
+                	break;
+                }
+                case "ETH": {
+                	lblCoinName1.setText( "Ethereum •" );
+                	lblCoinPrice1.setText( strETHPrice );
+                	break;
+                }
+                case "LTC": {
+                	lblCoinName1.setText( "Litecoin •" );
+                	lblCoinPrice1.setText( strLTCPrice );
+                	break;
+                }
+                default: {
+                	LOGGER.error("Value for Coin1 {} is invalid, defaulting to BTC",strCoin1);
+                	lblCoinName1.setText("Bitcoin •");
+                	lblCoinPrice1.setText( strBTCPrice );
+                	break;
+                }
+                }
+                
+                
+                // Switch based on Coin2 name set in config
+                // to populate current prices
+                
+                switch (strCoin2) {
+                case "BTC" : {
+                	lblCoinName2.setText("Bitcoin •");
+                	lblCoinPrice2.setText( strBTCPrice );
+                	break;
+                }
+                case "ETH" : {
+                	lblCoinName2.setText( "Ethereum •" );
+                	lblCoinPrice2.setText( strETHPrice );
+                	break;
+                }
+                case "LTC" : {
+                	lblCoinName2.setText( "Litecoin •" );
+                	lblCoinPrice2.setText( strLTCPrice );
+                	break;
+                }
+                default: {
+                	LOGGER.error("Value for Coin2 {} is invalid, defaulting to BTC",strCoin2);
+                	lblCoinName2.setText("Bitcoin •");
+                	lblCoinPrice2.setText( strBTCPrice );
+                	break;
+                }
+                }
+                
+
+                
                 // Populate 24 Hour Change in Price
-                lblChangeBTC.setText( FORMATTER.format( btc.getChange24hour() ) );
+                
                 // Set Change color and size based on positive or negative
                 // value
-                if( btc.getChange24hour() < 0 ) {
-                    lblChangeBTC.setFont( new Font( "Cantarell", Font.BOLD, 24 ) );
-                    lblChangeBTC.setForeground( new Color( 204, 0, 0 ) );
+                
+                if( cryptoPrices.get( strMainCoin ).getChange24hour() < 0 ) {
+                    lblChangePrice.setFont( new Font( "Cantarell", Font.BOLD, 24 ) );
+                    lblChangePrice.setForeground( new Color( 204, 0, 0 ) );
                 } else {
-                    lblChangeBTC.setFont( new Font( "Cantarell", Font.BOLD, 19 ) );
-                    lblChangeBTC.setForeground( new Color( 0, 255, 0 ) );
+                    lblChangePrice.setFont( new Font( "Cantarell", Font.BOLD, 19 ) );
+                    lblChangePrice.setForeground( new Color( 0, 255, 0 ) );
                 }
 
+                
                 // Set Profit value
                 double dblBitcoinOwned = CONFIG.getDouble( "Bitcoin.Qty" );
                 double dblEthereumOwned = CONFIG.getDouble( "Ethereum.Qty" );
@@ -232,15 +332,18 @@ public class Dashboard {
      * 
      */
     private void fillGraph() {
-        graphPanel.getAxisX().getAxisTitle().setTitle( "" );
-        graphPanel.getAxisY().getAxisTitle().setTitle( "" );
+        graphPanel.getAxisX().getAxisTitle().setTitle( "Timestamp" );
+        graphPanel.getAxisY().getAxisTitle().setTitle( "Price" );
         // Create an ITrace:
         ITrace2D trace = new Trace2DSimple("");
+		trace.setColor(new Color(0, 0, 255));
+		trace.setStroke(new BasicStroke(1.5f));
+		
         // Add the trace to the chart. This has to be done before adding points
         // (deadlock prevention):
         graphPanel.addTrace( trace );
 
-        for( Quote quote : bitcoinHistoricalPrices.quotesByMinute) {
+        for( Quote quote : bitcoinHistoricalPrices.quotes) {
             trace.addPoint( quote.date.getTime(), quote.price );
         }
         IAxis<IAxisScalePolicy> yAxis = (IAxis<IAxisScalePolicy>)this.graphPanel.getAxisY();
@@ -282,6 +385,7 @@ public class Dashboard {
      */
     private void initialize() {
         frmRpiDashboard = new JFrame();
+        frmRpiDashboard.getContentPane().setBackground(Color.WHITE);
         frmRpiDashboard.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE ); // Already
                                                                           // there
         // frmRpiDashboard.setExtendedState(JFrame.MAXIMIZED_BOTH);
@@ -292,44 +396,74 @@ public class Dashboard {
         frmRpiDashboard.setDefaultCloseOperation( JFrame.EXIT_ON_CLOSE );
         frmRpiDashboard.getContentPane().setLayout( null );
 
-        lblPriceBTC = new JLabel( "----" );
-        lblPriceBTC.setHorizontalAlignment( SwingConstants.CENTER );
-        lblPriceBTC.setFont( new Font( "Dialog", Font.BOLD, 25 ) );
-        lblPriceBTC.setBounds( 0, 61, 221, 23 );
-        frmRpiDashboard.getContentPane().add( lblPriceBTC );
+        lblPriceMain = new JLabel( "----" );
+        lblPriceMain.setHorizontalAlignment( SwingConstants.CENTER );
+        lblPriceMain.setFont( new Font( "Dialog", Font.BOLD, 25 ) );
+        lblPriceMain.setBounds( 0, 61, 221, 23 );
+        frmRpiDashboard.getContentPane().add( lblPriceMain );
 
-        lblChangeBTC = new JLabel( "----" );
-        lblChangeBTC.setHorizontalAlignment( SwingConstants.CENTER );
-        lblChangeBTC.setFont( new Font( "Dialog", Font.BOLD, 25 ) );
-        lblChangeBTC.setBounds( 221, 61, 259, 23 );
-        frmRpiDashboard.getContentPane().add( lblChangeBTC );
+        lblChangePrice = new JLabel( "----" );
+        lblChangePrice.setHorizontalAlignment( SwingConstants.CENTER );
+        lblChangePrice.setFont( new Font( "Dialog", Font.BOLD, 25 ) );
+        lblChangePrice.setBounds( 221, 61, 259, 23 );
+        frmRpiDashboard.getContentPane().add( lblChangePrice );
 
-        lblPriceETH = new JLabel( "----" );
-        lblPriceETH.setFont( new Font( "Dialog", Font.BOLD, 12 ) );
-        lblPriceETH.setBounds( 82, 10, 66, 15 );
-        frmRpiDashboard.getContentPane().add( lblPriceETH );
+        lblCoinPrice1 = new JLabel( "----" );
+        lblCoinPrice1.setHorizontalAlignment(SwingConstants.LEFT);
+        lblCoinPrice1.setFont( new Font( "Dialog", Font.BOLD, 12 ) );
+        lblCoinPrice1.setBounds( 82, 10, 66, 15 );
+        frmRpiDashboard.getContentPane().add( lblCoinPrice1 );
 
-        lblPriceLTC = new JLabel( "----" );
-        lblPriceLTC.setFont( new Font( "Dialog", Font.BOLD, 12 ) );
-        lblPriceLTC.setBounds( 203, 10, 66, 15 );
-        frmRpiDashboard.getContentPane().add( lblPriceLTC );
+        lblCoinPrice2 = new JLabel( "----" );
+        lblCoinPrice2.setHorizontalAlignment(SwingConstants.LEFT);
+        lblCoinPrice2.setFont( new Font( "Dialog", Font.BOLD, 12 ) );
+        lblCoinPrice2.setBounds( 203, 10, 66, 15 );
+        frmRpiDashboard.getContentPane().add( lblCoinPrice2 );
 
-        JLabel lblProfit = new JLabel( "Profit:" );
-        lblProfit.setFont( new Font( "Dialog", Font.BOLD, 10 ) );
-        lblProfit.setBounds( 270, 11, 35, 15 );
+        JLabel lblProfit = new JLabel( "Profit •" );
+        lblProfit.setForeground(Color.BLUE);
+        lblProfit.setFont( new Font("Dialog", Font.BOLD, 10) );
+        lblProfit.setBounds( 266, 11, 44, 15 );
         frmRpiDashboard.getContentPane().add( lblProfit );
 
         lblProfitValue = new JLabel( "----" );
         lblProfitValue.setFont( new Font( "Dialog", Font.BOLD, 16 ) );
         lblProfitValue.setBounds( 317, 0, 113, 33 );
         frmRpiDashboard.getContentPane().add( lblProfitValue );
-
-        lblCryptoBG = new JLabel();
-        lblCryptoBG.setVerticalAlignment( SwingConstants.TOP );
-        lblCryptoBG.setBounds( 0, 0, 480, 151 );
-        lblCryptoBG.setIcon(
-                new ImageIcon( Dashboard.class.getResource( "/resources/Background.png" ) ) );
-        frmRpiDashboard.getContentPane().add( lblCryptoBG );
+        
+        JSeparator separator = new JSeparator();
+        separator.setBounds(0, 34, 480, 2);
+        frmRpiDashboard.getContentPane().add(separator);
+        
+        separator_1 = new JSeparator();
+        separator_1.setOrientation(SwingConstants.VERTICAL);
+        separator_1.setBounds(229, 46, 2, 64);
+        frmRpiDashboard.getContentPane().add(separator_1);
+        
+        lblCoinName1 = new JLabel("Ethereum •");
+        lblCoinName1.setHorizontalAlignment(SwingConstants.RIGHT);
+        lblCoinName1.setForeground(Color.BLUE);
+        lblCoinName1.setFont(new Font("Dialog", Font.BOLD, 10));
+        lblCoinName1.setBounds(12, 11, 66, 15);
+        frmRpiDashboard.getContentPane().add(lblCoinName1);
+        
+        lblCoinName2 = new JLabel("Litecoin •");
+        lblCoinName2.setHorizontalAlignment(SwingConstants.RIGHT);
+        lblCoinName2.setForeground(Color.BLUE);
+        lblCoinName2.setFont(new Font("Dialog", Font.BOLD, 10));
+        lblCoinName2.setBounds(130, 11, 66, 15);
+        frmRpiDashboard.getContentPane().add(lblCoinName2);
+        
+        lblPriceMainLabel = new JLabel("BITCOIN PRICE");
+        lblPriceMainLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        lblPriceMainLabel.setFont(new Font("Dialog", Font.BOLD, 10));
+        lblPriceMainLabel.setBounds(61, 92, 113, 14);
+        frmRpiDashboard.getContentPane().add(lblPriceMainLabel);
+        
+        lblSinceYesterday = new JLabel("SINCE YESTERDAY (USD)");
+        lblSinceYesterday.setFont(new Font("Dialog", Font.BOLD, 10));
+        lblSinceYesterday.setBounds(282, 92, 146, 14);
+        frmRpiDashboard.getContentPane().add(lblSinceYesterday);
 
         JPanel newspanel = new JPanel();
         newspanel.setBorder(new MatteBorder(1, 1, 1, 1, (Color) new Color(0, 0, 0)));
@@ -343,6 +477,10 @@ public class Dashboard {
         graphPanel = new Chart2D();
         graphPanel.setBounds(0, 124, 480, 150);
         frmRpiDashboard.getContentPane().add(graphPanel);
+        
+        separator_2 = new JSeparator();
+        separator_2.setBounds(0, 122, 480, 2);
+        frmRpiDashboard.getContentPane().add(separator_2);
 
     }
 }
