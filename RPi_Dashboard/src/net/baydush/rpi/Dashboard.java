@@ -12,9 +12,12 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
@@ -25,12 +28,13 @@ import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
 import javax.swing.border.MatteBorder;
-import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.convert.DefaultListDelimiterHandler;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import info.monitorenter.gui.chart.Chart2D;
@@ -54,7 +58,7 @@ public class Dashboard {
     /**
      * Configuration object representing Dashboard.config
      */
-    private static PropertiesConfiguration CONFIG = null;
+    private static XMLConfiguration CONFIG = null;
     /**
      * Set number format for String for currency (e.x. $7,230.35)
      */
@@ -63,10 +67,9 @@ public class Dashboard {
 
     private JFrame frmRpiDashboard;
     
+    private ArrayList<Coin> coins;
     private JLabel[] lblNames = new JLabel[3];
     private JLabel[] lblPrices = new JLabel[3];
-    private String[] strSymbols;
-    private double[] dblQuantities;
     private JLabel lblChangePrice;
     private JLabel lblProfitValue;
     private JLabel lbl_addBatch;
@@ -96,15 +99,13 @@ public class Dashboard {
 
     public static String readRSSFeed() {
         try {
-            URL rssUrl = new URL( CONFIG.getString( "RSS.Feed" ) );
+            URL rssUrl = new URL( CONFIG.getString( "RSS.URL" ) );
             HttpURLConnection conn = (HttpURLConnection)rssUrl.openConnection();
-            for( String property : CONFIG.getStringArray( "RSS.Property" ) ) {
-                String[] parts = property.split( "=" );
-                if( parts.length != 2 ) {
-                    throw new ConfigurationException( "RSS.Property must be a key = value pair!" );
-                }
-                conn.addRequestProperty( parts[0].trim(), parts[1].trim() );
-            }
+            CONFIG.configurationsAt( "RSS.Property" ).stream().forEach( property -> {
+                String key = StringUtils.trim( property.getString( "[@Key]" ) );
+                String value = StringUtils.trim( property.getString( "[@Value]" ) );
+                conn.addRequestProperty( key, value );
+            });
             conn.connect();
 
             StringBuilder sourceCode = new StringBuilder();
@@ -135,9 +136,6 @@ public class Dashboard {
         catch( IOException ioe ) {
             LOGGER.error( "Something went wrong reading the contents", ioe );
         }
-        catch( ConfigurationException e ) {
-            LOGGER.error( "", e );
-        }
         return null;
     }
 
@@ -145,18 +143,20 @@ public class Dashboard {
         public void run() {
             try {
 
-                double dblSpent = CONFIG.getDouble( "Coins.TotalCost" );
-
                 cryptoPrices.update();
 
+                double dblSpent = 0.0;
                 double dblProfitValue = 0.0;
-                for( int ix = 0; ix < strSymbols.length; ix ++ ) {
+                for( int ix = 0; ix < coins.size(); ix ++ ) {
+                    Coin coin = coins.get( ix );
                     //Gets current prices
-                    CryptoPrice cp = cryptoPrices.get( strSymbols[ix] );
+                    CryptoPrice cp = cryptoPrices.get( coin.getSymbol() );
                     String strPrice = FORMATTER.format( cp.getPrice() );
                     lblPrices[ix].setText( strPrice );
+                    // Set Cost value
+                    dblSpent += coin.getCost();
                     // Set Profit value
-                    dblProfitValue += dblQuantities[ix] * cp.getPrice();
+                    dblProfitValue += coin.getQuantity() * cp.getPrice();
                     if( ix == 0 ) {
                         // Populate 24 Hour Change in Price
                         double change24hour = cp.getChange24hour();
@@ -212,47 +212,32 @@ public class Dashboard {
     public Dashboard() throws ConfigurationException {
         initConfig();
 
-        this.strSymbols = CONFIG.getStringArray( "Coin.Symbols" );
-        String[] strNames = CONFIG.getStringArray( "Coin.Names" );
-        String[] strQuantities = CONFIG.getStringArray( "Coin.Quantities" );
-        if( strSymbols.length != strNames.length || strSymbols.length != strQuantities.length
-                || strSymbols.length != 3 ) {
-            final String msg = "Symbols and Names config must have 3 entries";
-            LOGGER.error( msg );
-            throw new ConfigurationException(msg);
-        }
-        dblQuantities = new double[strQuantities.length];
-        for( int ix = 0; ix < strQuantities.length; ix++ ) {
-            dblQuantities[ix] = Double.parseDouble( strQuantities[ix] );
-        }
+        coins = new ArrayList<>();
+        CONFIG.configurationsAt( "Coins.Coin" ).stream().forEachOrdered( coin -> {
+            String name = StringUtils.trim( coin.getString( "[@Name]" ) );
+            String symbol = StringUtils.trim( coin.getString( "[@Symbol]" ) );
+            double qty = coin.getDouble( "[@Qty]", 0.0 );
+            double cost = coin.getDouble( "[@Cost]", 0.0 );
+            coins.add( new Coin( name, symbol, qty, cost ) );
+        });
 
         cryptoPrices = new CryptoPrices();
         
         // Entry [0] is the main one
-        bitcoinHistoricalPrices = new BitcoinHistoricalPrices(strSymbols[0]);
+        bitcoinHistoricalPrices = new BitcoinHistoricalPrices(coins.get( 0 ).getSymbol());
         
         initialize();
 
-        for( int ix = 0; ix < strNames.length; ix++ ) {
-            lblNames[ix].setText( strNames[ix] );
-            cryptoPrices.addSymbol( strSymbols[ix] );
+        for( int ix = 0; ix < coins.size(); ix++ ) {
+            lblNames[ix].setText( coins.get( ix ).getName() );
+            cryptoPrices.addSymbol( coins.get( ix ).getSymbol() );
         }
-        fillLabels(strNames);
 
         fillGraph();
         
         Timer timer = new Timer();
         timer.schedule( new RefreshCryptoPrices(), 0, 10000 );
         timer.schedule( new RefreshMarquee(), 0, 600000 );
-    }
-
-    /**
-     * 
-     */
-    private void fillLabels( String[] strNames ) {
-        for( int ix = 0; ix < strNames.length; ix ++ ) {
-            this.lblNames[ix].setText( strNames[ix] );
-        }
     }
 
     /**
@@ -306,12 +291,11 @@ public class Dashboard {
      *             if there is an error
      */
     private void initConfig() throws ConfigurationException {
-        FileBasedConfigurationBuilder<PropertiesConfiguration> builder = new FileBasedConfigurationBuilder<PropertiesConfiguration>(
-                PropertiesConfiguration.class )
-                        .configure( new Parameters().properties().setFileName( "Dashboard.config" )
-                                .setThrowExceptionOnMissing( true )
-                                .setListDelimiterHandler( new DefaultListDelimiterHandler( ',' ) )
-                                .setIncludesAllowed( false ) );
+        Parameters params = new Parameters();
+        FileBasedConfigurationBuilder<XMLConfiguration> builder =
+            new FileBasedConfigurationBuilder<XMLConfiguration>( XMLConfiguration.class )
+            .configure(params.xml()
+                    .setFileName("Dashboard.config"));
         CONFIG = builder.getConfiguration();
     }
 
