@@ -71,6 +71,7 @@ public class Dashboard {
     private JLabel lblProfitValue;
     private Marquee lbl_addBatch;
     private Chart2D graphPanel;
+    private ITrace2D trace;
     private CryptoPrices cryptoPrices;
     private BitcoinHistoricalPrices bitcoinHistoricalPrices;
     private JLabel lblSinceYesterday;
@@ -199,6 +200,18 @@ public class Dashboard {
         }
     }
 
+    class RefreshGraph extends TimerTask {
+
+        public void run() {
+            if( bitcoinHistoricalPrices == null ) {
+                bitcoinHistoricalPrices = new BitcoinHistoricalPrices( coins.get( 0 ).getSymbol() );
+            } else {
+                bitcoinHistoricalPrices.refresh();
+            }
+            fillGraph();
+        }
+    }
+
     /**
      * Create the application.
      * 
@@ -219,9 +232,6 @@ public class Dashboard {
 
         cryptoPrices = new CryptoPrices();
         
-        // Entry [0] is the main one
-        bitcoinHistoricalPrices = new BitcoinHistoricalPrices(coins.get( 0 ).getSymbol());
-        
         initialize();
 
         for( int ix = 0; ix < coins.size(); ix++ ) {
@@ -229,55 +239,65 @@ public class Dashboard {
             cryptoPrices.addSymbol( coins.get( ix ).getSymbol() );
         }
 
-        fillGraph();
+        initGraph();
         
         Timer timer = new Timer();
-        timer.schedule( new RefreshCryptoPrices(), 0, 10000 );
-        timer.schedule( new RefreshMarquee(), 0, 600000 );
+        timer.schedule( new RefreshCryptoPrices(), 0, 10*1000 );
+        timer.schedule( new RefreshMarquee(), 0, 18*60*1000 );
+        timer.schedule(  new RefreshGraph(), 0,  5*60*1000 );
     }
 
     /**
      * 
      */
-    private void fillGraph() {
+    private void initGraph() {
         graphPanel.getAxisX().getAxisTitle().setTitle( "Timestamp" );
         graphPanel.getAxisY().getAxisTitle().setTitle( "Price" );
         // Create an ITrace:
-        ITrace2D trace = new Trace2DSimple("");
-		trace.setColor(Color.BLUE);
-		trace.setStroke(new BasicStroke(1.5f));
+        this.trace = new Trace2DSimple("");
+        this.trace.setColor(Color.BLUE);
+        this.trace.setStroke(new BasicStroke(1.5f));
 
         // Add the trace to the chart. This has to be done before adding points
         // (deadlock prevention):
-        graphPanel.addTrace( trace );
+        graphPanel.addTrace( this.trace );
 
         // Tool tips and highlighting: Both modes point out the neares trace
         // point to the cursor:
         graphPanel.setToolTipType( Chart2D.ToolTipType.VALUE_SNAP_TO_TRACEPOINTS );
-        trace.setPointHighlighter( new PointPainterDisc( 10 ) );
+        this.trace.setPointHighlighter( new PointPainterDisc( 10 ) );
         graphPanel.enablePointHighlighting( true );
         // add code to deactivate the mouse tootip when we leave the graph JPanel
         Toolkit.getDefaultToolkit().addAWTEventListener(
                 new TargetedMouseHandler(this.frmRpiDashboard, this.graphPanel), 
                 AWTEvent.MOUSE_EVENT_MASK);
 
-
-        for( Quote quote : bitcoinHistoricalPrices.quotes) {
-            trace.addPoint( quote.date.getTime(), quote.price );
-        }
         IAxis<IAxisScalePolicy> yAxis = (IAxis<IAxisScalePolicy>)this.graphPanel.getAxisY();
         yAxis.setFormatter(new LabelFormatterNumber(new DecimalFormat("$#,##0")));
 
+        IAxis<IAxisScalePolicy> xAxis = (IAxis<IAxisScalePolicy>)this.graphPanel.getAxisX();
+        xAxis.setAxisScalePolicy(new AxisScalePolicyManualTicks());
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
+        xAxis.setFormatter(new LabelFormatterDate(dateFormat));
+    }
+
+    /**
+     * 
+     */
+    private void fillGraph() {
+        // TODO Auto-generated method stub
+        this.trace.removeAllPoints();
+
+        for( Quote quote : bitcoinHistoricalPrices.quotes) {
+            this.trace.addPoint( quote.date.getTime(), quote.price );
+        }
         long minSample = bitcoinHistoricalPrices.quotes.get( 0 ).date.getTime();
         long maxSample = bitcoinHistoricalPrices.quotes
                 .get( bitcoinHistoricalPrices.quotes.size() - 1 ).date.getTime();
         
         IAxis<IAxisScalePolicy> xAxis = (IAxis<IAxisScalePolicy>)this.graphPanel.getAxisX();
         xAxis.setRangePolicy(new RangePolicyFixedViewport(new Range(minSample, maxSample)));
-        xAxis.setAxisScalePolicy(new AxisScalePolicyManualTicks());
         xAxis.setMinorTickSpacing( ( maxSample - minSample ) / 5 );
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm");
-        xAxis.setFormatter(new LabelFormatterDate(dateFormat));
     }
 
     /**
