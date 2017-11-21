@@ -12,8 +12,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.text.SimpleDateFormat;
@@ -32,7 +30,6 @@ import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -72,7 +69,7 @@ public class Dashboard {
     private JLabel[] lblPrices = new JLabel[3];
     private JLabel lblChangePrice;
     private JLabel lblProfitValue;
-    private JLabel lbl_addBatch;
+    private Marquee lbl_addBatch;
     private Chart2D graphPanel;
     private CryptoPrices cryptoPrices;
     private BitcoinHistoricalPrices bitcoinHistoricalPrices;
@@ -197,9 +194,8 @@ public class Dashboard {
                 return;
             }
 
-            // Generates and starts the Marquee
-            Marquee marquee = new Marquee( lbl_addBatch, strNewsStories, 64 );
-            marquee.start();
+            // update the text
+            lbl_addBatch.setMarqueeText( strNewsStories );
         }
     }
 
@@ -385,11 +381,15 @@ public class Dashboard {
         frmRpiDashboard.getContentPane().add(lblSinceYesterday);
 
         JPanel newspanel = new JPanel();
-        newspanel.setBorder(new MatteBorder(1, 1, 1, 1, Color.WHITE));
+        newspanel.setBorder(new MatteBorder(1, 1, 1, 1, (Color) Color.BLACK));
         newspanel.setBounds( 0, 274, 480, 46 );
         frmRpiDashboard.getContentPane().add( newspanel );
+        newspanel.setLayout(null);
 
-        lbl_addBatch = new JLabel();
+        lbl_addBatch = new Marquee();
+        lbl_addBatch.setMarqueeText("");
+        lbl_addBatch.setBounds(1, 1, 478, 44);
+        lbl_addBatch.setFont(new Font("Serif", Font.ITALIC, 32));
         lbl_addBatch.setHorizontalAlignment( SwingConstants.LEFT );
         newspanel.add( lbl_addBatch );
         
