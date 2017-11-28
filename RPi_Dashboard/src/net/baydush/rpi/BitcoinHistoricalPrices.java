@@ -79,12 +79,11 @@ public class BitcoinHistoricalPrices {
     
     /**
      * Read the JSON prices from the REST API
-     * @param urlString URL to get the prices form
      * @return JSON string
      * @throws IOException is the URL is bad
      */
     private String readUrl() throws IOException {
-        URL url = new URL( String.format( this.strURL, this.symbol ) );
+        URL url = new URL( String.format( BitcoinHistoricalPrices.strURL, this.symbol ) );
         HttpsURLConnection conn = (HttpsURLConnection)url.openConnection();
         conn.addRequestProperty("accept", "application/json");
 		conn.addRequestProperty("accept-language","en");

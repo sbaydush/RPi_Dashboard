@@ -6,6 +6,8 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Toolkit;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -20,11 +22,13 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
+import javax.swing.ToolTipManager;
 import javax.swing.border.MatteBorder;
 import org.apache.commons.configuration2.XMLConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
@@ -251,6 +255,7 @@ public class Dashboard {
      * 
      */
     private void initGraph() {
+        // remove any titles
         graphPanel.getAxisX().getAxisTitle().setTitle( "Timestamp" );
         graphPanel.getAxisY().getAxisTitle().setTitle( "Price" );
         // Create an ITrace:
@@ -261,8 +266,24 @@ public class Dashboard {
         // Add the trace to the chart. This has to be done before adding points
         // (deadlock prevention):
         graphPanel.addTrace( this.trace );
+        graphPanel.addMouseListener( new MouseAdapter() {
+            @Override
+            public void mouseReleased(MouseEvent e ) {
+                JComponent component = (JComponent)e.getSource();
+                MouseEvent phantom = new MouseEvent(
+                        component,
+                        MouseEvent.MOUSE_MOVED,
+                        System.currentTimeMillis(),
+                        0,
+                        e.getX(),
+                        e.getY(),
+                        0,
+                        false);
+                ToolTipManager.sharedInstance().mouseMoved( phantom );
+            }
+        });
 
-        // Tool tips and highlighting: Both modes point out the neares trace
+        // Tool tips and highlighting: Both modes point out the nearest trace
         // point to the cursor:
         graphPanel.setToolTipType( Chart2D.ToolTipType.VALUE_SNAP_TO_TRACEPOINTS );
         this.trace.setPointHighlighter( new PointPainterDisc( 10 ) );
