@@ -285,7 +285,8 @@ public class Dashboard {
 
         // Tool tips and highlighting: Both modes point out the nearest trace
         // point to the cursor:
-        graphPanel.setToolTipType( Chart2D.ToolTipType.VALUE_SNAP_TO_TRACEPOINTS );
+        //graphPanel.setToolTipType( Chart2D.ToolTipType.VALUE_SNAP_TO_TRACEPOINTS );
+        graphPanel.setToolTipType( new ToolTipType() );
         this.trace.setPointHighlighter( new PointPainterDisc( 10 ) );
         graphPanel.enablePointHighlighting( true );
         // add code to deactivate the mouse tootip when we leave the graph JPanel
