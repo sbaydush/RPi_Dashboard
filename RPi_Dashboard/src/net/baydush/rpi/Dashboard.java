@@ -430,7 +430,7 @@ public class Dashboard {
 
         lbl_addBatch = new Marquee();
         lbl_addBatch.setMarqueeText("");
-        lbl_addBatch.setBounds(1, 1, 478, 44);
+        lbl_addBatch.setBounds(-41, 1, 585, 44);
         lbl_addBatch.setFont(new Font("Serif", Font.ITALIC, 32));
         lbl_addBatch.setHorizontalAlignment( SwingConstants.LEFT );
         newspanel.add( lbl_addBatch );
